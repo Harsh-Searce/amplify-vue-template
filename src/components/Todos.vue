@@ -8,54 +8,86 @@ const client = generateClient<Schema>();
 
 // create a reactive reference to the array of todos
 const todos = ref<Array<Schema['Todo']["type"]>>([]);
+const newTodoContent = ref(""); // New todo input
 
 function listTodos() {
   client.models.Todo.observeQuery().subscribe({
-    next: ({ items, isSynced }) => {
-      todos.value = items
-     },
+    next: ({ items }) => {
+      todos.value = items;
+    },
   }); 
 }
 
 function createTodo() {
+  if (!newTodoContent.value.trim()) return; // Prevent empty todos
+
   client.models.Todo.create({
-    content: window.prompt("Todo content")
+    content: newTodoContent.value
   }).then(() => {
-    // After creating a new todo, update the list of todos
+    newTodoContent.value = ""; // Clear input after adding
     listTodos();
   });
 }
-   
+ 
 function deleteTodo(id: string) {
-    client.models.Todo.delete({ id })
-  }   
+  client.models.Todo.delete({ id }).then(() => {
+    listTodos();
+  });
+}
+
 // fetch todos when the component is mounted
- onMounted(() => {
+onMounted(() => {
   listTodos();
 });
-
 </script>
 
 <template>
   <main>
-    <h1>My todos</h1>
-    <button @click="createTodo">+ new</button>
+    <h1>My Todos</h1>
+
+    <!-- New Input Box for Adding Todos -->
+    <div>
+      <input v-model="newTodoContent" placeholder="Enter a new todo..." />
+      <button @click="createTodo">+ Add</button>
+    </div>
+
     <ul>
-      <li 
-        v-for="todo in todos" 
-        :key="todo.id"
-                
-        @click="deleteTodo(todo.id)"
-        >
+      <li v-for="todo in todos" :key="todo.id" @click="deleteTodo(todo.id)">
         {{ todo.content }}
       </li>
     </ul>
-    <div>
-      🥳 App successfully hosted. Try creating a new todo.
-      <br />
-      <a href="https://docs.amplify.aws/gen2/start/quickstart/nextjs-pages-router/">
-        Review next steps of this tutorial.
-      </a>
+
+    <div class="info-box">
+      Finished a task? Click to remove it!
     </div>
   </main>
 </template>
+
+<style scoped>
+/* Add some spacing & styling */
+input {
+  padding: 8px;
+  margin-right: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #0a0a0a;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.info-box {
+  margin-top: 12px;
+  font-style: italic;
+  color: #666;
+}
+</style>
