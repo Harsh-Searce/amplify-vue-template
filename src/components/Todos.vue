@@ -18,6 +18,7 @@ function listTodos() {
   }); 
 }
 
+
 function createTodo() {
   if (!newTodoContent.value.trim()) return; // Prevent empty todos
 
